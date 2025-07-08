@@ -25,19 +25,30 @@ const ShopManagement: React.FC<ShopManagementProps> = ({ token, onStatsUpdate })
     shopName: '',
     ownerName: '',
     phoneNumber: '',
-    password: ''
+    password: '',
+    shopId: '',
   });
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expandedShopId, setExpandedShopId] = useState<string | null>(null);
   const [shopQRCodes, setShopQRCodes] = useState<Record<string, any[]>>({});
   const [shopQRCodesLoading, setShopQRCodesLoading] = useState<string | null>(null);
+  const [shopIdEdited, setShopIdEdited] = useState(false);
 
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     fetchShops();
   }, []);
+
+  useEffect(() => {
+    if (!shopIdEdited) {
+      const base = formData.shopName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const rand = Math.random().toString(36).substr(2, 4).toUpperCase();
+      setFormData(f => ({ ...f, shopId: base ? `${base}_${rand}` : '' }));
+    }
+    // eslint-disable-next-line
+  }, [formData.shopName]);
 
   const fetchShops = async () => {
     try {
@@ -85,7 +96,7 @@ const ShopManagement: React.FC<ShopManagementProps> = ({ token, onStatsUpdate })
         onStatsUpdate();
         setShowForm(false);
         setEditingShop(null);
-        setFormData({ shopName: '', ownerName: '', phoneNumber: '', password: '' });
+        setFormData({ shopName: '', ownerName: '', phoneNumber: '', password: '', shopId: '' });
         setSubmitError('');
       } else {
         setSubmitError(data.message || 'Failed to save shop');
@@ -124,8 +135,10 @@ const ShopManagement: React.FC<ShopManagementProps> = ({ token, onStatsUpdate })
       shopName: shop.shopName,
       ownerName: shop.ownerName,
       phoneNumber: shop.phoneNumber,
-      password: ''
+      password: '',
+      shopId: shop.shopId,
     });
+    setShopIdEdited(false);
     setShowForm(true);
   };
 
@@ -228,6 +241,21 @@ const ShopManagement: React.FC<ShopManagementProps> = ({ token, onStatsUpdate })
                 required={!editingShop}
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Shop ID <span className="text-xs text-gray-400">(auto-generated, can edit)</span>
+              </label>
+              <input
+                type="text"
+                value={formData.shopId}
+                onChange={e => {
+                  setFormData({ ...formData, shopId: e.target.value });
+                  setShopIdEdited(true);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+            </div>
             {submitError && (
               <div className="md:col-span-2 bg-red-50 border border-red-200 rounded-lg p-3">
                 <p className="text-red-600 text-sm">{submitError}</p>
@@ -247,7 +275,7 @@ const ShopManagement: React.FC<ShopManagementProps> = ({ token, onStatsUpdate })
                 onClick={() => {
                   setShowForm(false);
                   setEditingShop(null);
-                  setFormData({ shopName: '', ownerName: '', phoneNumber: '', password: '' });
+                  setFormData({ shopName: '', ownerName: '', phoneNumber: '', password: '', shopId: '' });
                   setSubmitError('');
                 }}
                 className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

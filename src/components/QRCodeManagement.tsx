@@ -68,6 +68,11 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
   const [deletingSelected, setDeletingSelected] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
+  // Add state for shop assignment modal
+  const [shopAssigning, setShopAssigning] = useState<string | null>(null);
+  const [shopAssignValue, setShopAssignValue] = useState<string>('');
+  const [qrUpdating, setQrUpdating] = useState<string | null>(null);
+
   const paperPresets = [
     { label: 'A4 (8.27 x 11.69 in)', value: 'A4', width: 8.27, height: 11.69 },
     { label: 'A3 (11.69 x 16.54 in)', value: 'A3', width: 11.69, height: 16.54 },
@@ -433,6 +438,45 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
       setDeleteError('Network error. Please try again.');
     } finally {
       setDeletingSelected(false);
+    }
+  };
+
+  // Handler to toggle activation
+  const handleToggleActivate = async (qrId: string, current: boolean) => {
+    setQrUpdating(qrId);
+    try {
+      const response = await fetch(`${baseUrl}/api/admin/qrcodes/activate-toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ qrId, activate: !current })
+      });
+      if (response.ok) {
+        // Refresh batch codes
+        const batchId = Object.keys(batchQRCodes).find(batchId => batchQRCodes[batchId].some(qr => qr._id === qrId));
+        if (batchId) await fetchBatchQRCodes(batchId);
+      }
+    } finally {
+      setQrUpdating(null);
+    }
+  };
+
+  // Handler to assign shop
+  const handleAssignShop = async (qrId: string, shopId: string) => {
+    setQrUpdating(qrId);
+    try {
+      const response = await fetch(`${baseUrl}/api/admin/qrcodes/assign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ qrIds: [qrId], shopId })
+      });
+      if (response.ok) {
+        // Refresh batch codes
+        const batchId = Object.keys(batchQRCodes).find(batchId => batchQRCodes[batchId].some(qr => qr._id === qrId));
+        if (batchId) await fetchBatchQRCodes(batchId);
+      }
+    } finally {
+      setQrUpdating(null);
+      setShopAssigning(null);
     }
   };
 
@@ -899,17 +943,48 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
                               </div>
                               <div className="space-y-1">
                                 <p className="text-xs text-gray-600">
-                                  <strong>Shop:</strong> {getShopName(qrcode.assignedShopId)}
+                                  <strong>Shop:</strong> {getShopName(qrcode.assignedShopId)}{' '}
+                                  <button
+                                    className="ml-1 text-blue-600 underline text-xs"
+                                    onClick={e => { e.stopPropagation(); setShopAssigning(qrcode._id); setShopAssignValue(qrcode.assignedShopId || ''); }}
+                                    disabled={qrUpdating === qrcode._id}
+                                  >
+                                    Change
+                                  </button>
+                                  {shopAssigning === qrcode._id && (
+                                    <select
+                                      className="ml-2 border rounded px-1 py-0.5 text-xs"
+                                      value={shopAssignValue}
+                                      onChange={e => setShopAssignValue(e.target.value)}
+                                      onClick={e => e.stopPropagation()}
+                                      onBlur={() => setShopAssigning(null)}
+                                    >
+                                      <option value="">Unassigned</option>
+                                      {shops.map(shop => (
+                                        <option key={shop.shopId} value={shop.shopId}>{shop.shopName}</option>
+                                      ))}
+                                    </select>
+                                  )}
+                                  {shopAssigning === qrcode._id && (
+                                    <button
+                                      className="ml-1 text-green-600 underline text-xs"
+                                      onClick={e => { e.stopPropagation(); handleAssignShop(qrcode._id, shopAssignValue); }}
+                                      disabled={qrUpdating === qrcode._id}
+                                    >Save</button>
+                                  )}
                                 </p>
                                 <p className="text-xs text-gray-600">
-                                  <strong>Status:</strong> 
-                                  <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
-                                    qrcode.isActivated 
-                                      ? 'bg-green-100 text-green-800' 
-                                      : 'bg-yellow-100 text-yellow-800'
-                                  }`}>
+                                  <strong>Status:</strong>
+                                  <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${qrcode.isActivated ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                                     {qrcode.isActivated ? 'Activated' : 'Pending'}
                                   </span>
+                                  <button
+                                    className="ml-2 text-xs px-2 py-0.5 rounded border border-gray-300 bg-white hover:bg-gray-100"
+                                    onClick={e => { e.stopPropagation(); handleToggleActivate(qrcode._id, qrcode.isActivated); }}
+                                    disabled={qrUpdating === qrcode._id}
+                                  >
+                                    {qrUpdating === qrcode._id ? '...' : (qrcode.isActivated ? 'Deactivate' : 'Activate')}
+                                  </button>
                                 </p>
                                 {qrcode.activationDate && (
                                   <p className="text-xs text-gray-600">
