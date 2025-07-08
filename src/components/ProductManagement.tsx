@@ -31,6 +31,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ token, onStatsUpd
   const [categories, setCategories] = useState<{ _id: string; name: string; description: string }[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
     fetchProducts();
     fetchCategories();
@@ -38,7 +40,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ token, onStatsUpd
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('https://qr-system-back-end.vercel.app/api/admin/categories', {
+      const response = await fetch(`${baseUrl}/api/admin/categories`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -54,7 +56,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ token, onStatsUpd
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('https://qr-system-back-end.vercel.app/api/admin/products', {
+      const response = await fetch(`${baseUrl}/api/admin/products`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -84,8 +86,8 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ token, onStatsUpd
     }
     
     const url = editingProduct 
-      ? `/api/admin/products/${editingProduct._id}`
-      : '/api/admin/products';
+      ? `${baseUrl}/api/admin/products/${editingProduct._id}`
+      : `${baseUrl}/api/admin/products`;
     
     const method = editingProduct ? 'PUT' : 'POST';
     
@@ -119,7 +121,7 @@ const ProductManagement: React.FC<ProductManagementProps> = ({ token, onStatsUpd
   const handleDelete = async (productId: string) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        const response = await fetch(`https://qr-system-back-end.vercel.app/api/admin/products/${productId}`, {
+        const response = await fetch(`${baseUrl}/api/admin/products/${productId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`

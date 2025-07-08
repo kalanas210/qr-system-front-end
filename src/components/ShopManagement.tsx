@@ -33,13 +33,15 @@ const ShopManagement: React.FC<ShopManagementProps> = ({ token, onStatsUpdate })
   const [shopQRCodes, setShopQRCodes] = useState<Record<string, any[]>>({});
   const [shopQRCodesLoading, setShopQRCodesLoading] = useState<string | null>(null);
 
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
     fetchShops();
   }, []);
 
   const fetchShops = async () => {
     try {
-      const response = await fetch('https://qr-system-back-end.vercel.app/api/admin/shops', {
+      const response = await fetch(`${baseUrl}/api/admin/shops`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -61,8 +63,8 @@ const ShopManagement: React.FC<ShopManagementProps> = ({ token, onStatsUpdate })
     setSubmitError('');
     
     const url = editingShop 
-      ? `/api/admin/shops/${editingShop._id}`
-      : '/api/admin/shops';
+      ? `${baseUrl}/api/admin/shops/${editingShop._id}`
+      : `${baseUrl}/api/admin/shops`;
     
     const method = editingShop ? 'PUT' : 'POST';
     
@@ -99,7 +101,7 @@ const ShopManagement: React.FC<ShopManagementProps> = ({ token, onStatsUpdate })
   const handleDelete = async (shopId: string) => {
     if (window.confirm('Are you sure you want to delete this shop?')) {
       try {
-        const response = await fetch(`https://qr-system-back-end.vercel.app/api/admin/shops/${shopId}`, {
+        const response = await fetch(`${baseUrl}/api/admin/shops/${shopId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -136,7 +138,7 @@ const ShopManagement: React.FC<ShopManagementProps> = ({ token, onStatsUpdate })
     if (!shopQRCodes[shop.shopId]) {
       setShopQRCodesLoading(shop.shopId);
       try {
-        const response = await fetch(`https://qr-system-back-end.vercel.app/api/admin/shops/${shop.shopId}/qrcodes`, {
+        const response = await fetch(`${baseUrl}/api/admin/shops/${shop.shopId}/qrcodes`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {

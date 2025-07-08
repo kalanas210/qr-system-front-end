@@ -51,9 +51,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ token, onLogout }) => {
     weeklyActivations: []
   });
 
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
   const fetchStats = useCallback(async () => {
     try {
-      const response = await fetch('https://qr-system-back-end.vercel.app/api/admin/dashboard', {
+      const response = await fetch(`${baseUrl}/api/admin/dashboard`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -71,7 +73,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ token, onLogout }) => {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, baseUrl]);
 
   useEffect(() => {
     fetchStats();

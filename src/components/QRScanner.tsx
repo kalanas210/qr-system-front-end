@@ -29,6 +29,8 @@ interface QRData {
   warrantyEndDate?: string;
   remainingDays?: number;
 }
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
 
 const QRScanner: React.FC = () => {
   const { serialNumber } = useParams<{ serialNumber: string }>();
@@ -44,7 +46,7 @@ const QRScanner: React.FC = () => {
 
   const fetchQRData = async () => {
     try {
-      const response = await fetch(`https://qr-system-back-end.vercel.app/api/public/qr/${serialNumber}`);
+      const response = await fetch(`${baseUrl}/api/public/qr/${serialNumber}`);
       const data = await response.json();
 
       if (response.ok) {

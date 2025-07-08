@@ -22,6 +22,7 @@ const Settings: React.FC<SettingsProps> = ({ token }) => {
     description: ''
   });
   const [error, setError] = useState('');
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     fetchCategories();
@@ -29,7 +30,7 @@ const Settings: React.FC<SettingsProps> = ({ token }) => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('https://qr-system-back-end.vercel.app/api/admin/categories', {
+      const response = await fetch(`${baseUrl}/api/admin/categories`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -50,8 +51,8 @@ const Settings: React.FC<SettingsProps> = ({ token }) => {
     setError('');
 
     const url = editingCategory 
-      ? `/api/admin/categories/${editingCategory._id}`
-      : '/api/admin/categories';
+      ? `${baseUrl}/api/admin/categories/${editingCategory._id}`
+      : `${baseUrl}/api/admin/categories`;
     
     const method = editingCategory ? 'PUT' : 'POST';
     
@@ -85,7 +86,7 @@ const Settings: React.FC<SettingsProps> = ({ token }) => {
   const handleDelete = async (categoryId: string) => {
     if (window.confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
       try {
-        const response = await fetch(`https://qr-system-back-end.vercel.app/api/admin/categories/${categoryId}`, {
+        const response = await fetch(`${baseUrl}/api/admin/categories/${categoryId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`

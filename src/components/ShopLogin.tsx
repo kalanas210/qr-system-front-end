@@ -19,6 +19,7 @@ interface QRData {
     phoneNumber: string;
   } | null;
 }
+const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const ShopLogin: React.FC = () => {
   const { serialNumber } = useParams<{ serialNumber: string }>();
@@ -35,7 +36,7 @@ const ShopLogin: React.FC = () => {
 
   const fetchQRData = async () => {
     try {
-      const response = await fetch(`https://qr-system-back-end.vercel.app/api/public/qr/${serialNumber}`);
+      const response = await fetch(`${baseUrl}/api/public/qr/${serialNumber}`);
       const data = await response.json();
 
       if (response.ok) {
@@ -54,7 +55,7 @@ const ShopLogin: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('https://qr-system-back-end.vercel.app/api/public/shop/login', {
+      const response = await fetch(`${baseUrl}/api/public/shop/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

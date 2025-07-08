@@ -21,6 +21,9 @@ interface QRData {
   } | null;
 }
 
+const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
+
 const ActivationForm: React.FC = () => {
   const { serialNumber } = useParams<{ serialNumber: string }>();
   const navigate = useNavigate();
@@ -33,7 +36,7 @@ const ActivationForm: React.FC = () => {
 
   const fetchQRData = useCallback(async () => {
     try {
-      const response = await fetch(`https://qr-system-back-end.vercel.app/api/public/qr/${serialNumber}`);
+      const response = await fetch(`${baseUrl}/api/public/qr/${serialNumber}`);
       const data = await response.json();
 
       if (response.ok) {
@@ -68,7 +71,7 @@ const ActivationForm: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`https://qr-system-back-end.vercel.app/api/public/qr/${serialNumber}/activate`, {
+      const response = await fetch(`${baseUrl}/api/public/qr/${serialNumber}/activate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

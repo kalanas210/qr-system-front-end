@@ -11,13 +11,15 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      const response = await fetch('https://qr-system-back-end.vercel.app/api/admin/login', {
+      const response = await fetch(`${baseUrl}/api/admin/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

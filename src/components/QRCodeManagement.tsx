@@ -72,16 +72,19 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
     fetchData();
   }, []);
 
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
+
   const fetchData = async () => {
     try {
       const [batchesResponse, productsResponse, shopsResponse] = await Promise.all([
-        fetch('https://qr-system-back-end.vercel.app/api/admin/qrcodes/batches', {
+        fetch(`${baseUrl}/api/admin/qrcodes/batches`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch('https://qr-system-back-end.vercel.app/api/admin/products', {
+        fetch(`${baseUrl}/api/admin/products`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch('https://qr-system-back-end.vercel.app/api/admin/shops', {
+        fetch(`${baseUrl}/api/admin/shops`, {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
@@ -109,7 +112,7 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
 
   const fetchBatchQRCodes = async (batchId: string) => {
     try {
-      const response = await fetch(`https://qr-system-back-end.vercel.app/api/admin/qrcodes/batch/${batchId}`, {
+      const response = await fetch(`${baseUrl}/api/admin/qrcodes/batch/${batchId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -143,7 +146,7 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
     e.preventDefault();
     
     try {
-      const response = await fetch('https://qr-system-back-end.vercel.app/api/admin/qrcodes/generate', {
+      const response = await fetch(`${baseUrl}/api/admin/qrcodes/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -167,7 +170,7 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
     e.preventDefault();
     
     try {
-      const response = await fetch('https://qr-system-back-end.vercel.app/api/admin/qrcodes/assign', {
+      const response = await fetch(`${baseUrl}/api/admin/qrcodes/assign`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -202,7 +205,7 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
       const product = products.find(p => p.productId === batch.productId);
       if (!product) return;
       const duplicate = window.confirm('Do you want each QR code duplicated side-by-side on the PDF? Click OK for duplicate, Cancel for no duplicate.');
-      const response = await fetch(`https://qr-system-back-end.vercel.app/api/admin/qrcodes/download-pdf/${product.productId}?duplicate=${duplicate ? 'true' : 'false'}`, {
+      const response = await fetch(`${baseUrl}/api/admin/qrcodes/download-pdf/${product.productId}?duplicate=${duplicate ? 'true' : 'false'}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -228,7 +231,7 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
     }
     const duplicate = window.confirm('Do you want each QR code duplicated side-by-side on the PDF? Click OK for duplicate, Cancel for no duplicate.');
     try {
-      const response = await fetch('https://qr-system-back-end.vercel.app/api/admin/qrcodes/download-selected-pdf', {
+      const response = await fetch(`${baseUrl}/api/admin/qrcodes/download-selected-pdf`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -266,7 +269,7 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
     }
     const duplicate = window.confirm('Do you want each QR code duplicated side-by-side on the sticker sheet? Click OK for duplicate, Cancel for no duplicate.');
     try {
-      const response = await fetch('https://qr-system-back-end.vercel.app/api/admin/qrcodes/sticker-sheet', {
+      const response = await fetch(`${baseUrl}/api/admin/qrcodes/sticker-sheet`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -420,7 +423,7 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
     setDeletingBatchId(batchId);
     setDeleteError('');
     try {
-      const response = await fetch(`https://qr-system-back-end.vercel.app/api/admin/qrcodes/batch/${batchId}`, {
+      const response = await fetch(`${baseUrl}/api/admin/qrcodes/batch/${batchId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -444,7 +447,7 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
     setDeletingSelected(true);
     setDeleteError('');
     try {
-      const response = await fetch('https://qr-system-back-end.vercel.app/api/admin/qrcodes', {
+      const response = await fetch(`${baseUrl}/api/admin/qrcodes`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
