@@ -68,6 +68,24 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
   const [deletingSelected, setDeletingSelected] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
+  const paperPresets = [
+    { label: 'A4 (8.27 x 11.69 in)', value: 'A4', width: 8.27, height: 11.69 },
+    { label: 'A3 (11.69 x 16.54 in)', value: 'A3', width: 11.69, height: 16.54 },
+    { label: 'A5 (5.83 x 8.27 in)', value: 'A5', width: 5.83, height: 8.27 },
+    { label: '13 x 19 in', value: '13x19', width: 13, height: 19 },
+    { label: '48 in Roll (48 x 13 in)', value: '48roll', width: 48, height: 13 },
+    { label: 'Custom', value: 'custom' },
+  ];
+
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [downloadOptions, setDownloadOptions] = useState({
+    paperSize: 'A4',
+    customWidth: 8.27,
+    customHeight: 11.69,
+    copiesPerProduct: 2,
+    margin: 40,
+  });
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -198,40 +216,27 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
     }
   };
 
-  const handleDownloadPDF = async (batchId: string) => {
-    try {
-      const batch = batches.find(b => b._id === batchId);
-      if (!batch) return;
-      const product = products.find(p => p.productId === batch.productId);
-      if (!product) return;
-      const duplicate = window.confirm('Do you want each QR code duplicated side-by-side on the PDF? Click OK for duplicate, Cancel for no duplicate.');
-      const response = await fetch(`${baseUrl}/api/admin/qrcodes/download-pdf/${product.productId}?duplicate=${duplicate ? 'true' : 'false'}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `QRCodes-${product.productName}-${batchId}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }
-    } catch (error) {
-      console.error('Error downloading PDF:', error);
-    }
-  };
-
-  const handleDownloadSelectedPDF = async () => {
+  const handleFlexibleDownload = async () => {
     if (selectedQRCodes.length === 0) {
       alert('Please select QR codes to download');
       return;
     }
-    const duplicate = window.confirm('Do you want each QR code duplicated side-by-side on the PDF? Click OK for duplicate, Cancel for no duplicate.');
+    setShowDownloadModal(true);
+  };
+
+  const submitFlexibleDownload = async () => {
+    setShowDownloadModal(false);
+    let paperSizeParam;
+    if (downloadOptions.paperSize === 'custom') {
+      paperSizeParam = {
+        width: parseFloat(downloadOptions.customWidth.toString()),
+        height: parseFloat(downloadOptions.customHeight.toString()),
+      };
+    } else {
+      paperSizeParam = downloadOptions.paperSize;
+    }
     try {
-      const response = await fetch(`${baseUrl}/api/admin/qrcodes/download-selected-pdf`, {
+      const response = await fetch(`${baseUrl}/api/admin/qrcodes/flexible-sticker-sheet`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -239,7 +244,9 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
         },
         body: JSON.stringify({
           qrIds: selectedQRCodes,
-          duplicate
+          paperSize: paperSizeParam,
+          copiesPerProduct: parseInt(downloadOptions.copiesPerProduct.toString()),
+          margin: parseInt(downloadOptions.margin.toString())
         })
       });
       if (response.ok) {
@@ -247,7 +254,7 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Selected-QRCodes-${selectedQRCodes.length}-items.pdf`;
+        a.download = `Stickers-${selectedQRCodes.length}-items.pdf`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -257,48 +264,7 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
         alert(data.message || 'Failed to download PDF');
       }
     } catch (error) {
-      console.error('Error downloading selected PDF:', error);
       alert('Failed to download PDF. Please try again.');
-    }
-  };
-
-  const handleDownloadStickerSheet = async () => {
-    if (selectedQRCodes.length === 0) {
-      alert('Please select QR codes to generate sticker sheet');
-      return;
-    }
-    const duplicate = window.confirm('Do you want each QR code duplicated side-by-side on the sticker sheet? Click OK for duplicate, Cancel for no duplicate.');
-    try {
-      const response = await fetch(`${baseUrl}/api/admin/qrcodes/sticker-sheet`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          qrIds: selectedQRCodes,
-          verticalSpacing: 0.05,
-          horizontalSpacing: 0,
-          duplicate
-        })
-      });
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `StickerSheet-${selectedQRCodes.length}-items.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } else {
-        const data = await response.json();
-        alert(data.message || 'Failed to generate sticker sheet');
-      }
-    } catch (error) {
-      console.error('Error generating sticker sheet:', error);
-      alert('Failed to generate sticker sheet. Please try again.');
     }
   };
 
@@ -507,18 +473,11 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
                 <span>Assign {selectedQRCodes.length} QR Code(s)</span>
               </button>
               <button
-                onClick={handleDownloadSelectedPDF}
+                onClick={handleFlexibleDownload}
                 className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
               >
                 <Download className="w-5 h-5" />
-                <span>Download {selectedQRCodes.length} QR Code(s)</span>
-              </button>
-              <button
-                onClick={handleDownloadStickerSheet}
-                className="flex items-center space-x-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
-              >
-                <QrCode className="w-5 h-5" />
-                <span>Generate Sticker Sheet</span>
+                <span>Download Stickers ({selectedQRCodes.length})</span>
               </button>
               <button
                 onClick={handleDeleteSelected}
@@ -771,6 +730,58 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
         </div>
       )}
 
+      {showDownloadModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-4">Download Sticker Sheet</h2>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Paper Size</label>
+              <select
+                value={downloadOptions.paperSize}
+                onChange={e => setDownloadOptions(opt => ({ ...opt, paperSize: e.target.value }))}
+                className="w-full border rounded px-2 py-1"
+              >
+                {paperPresets.map(p => (
+                  <option key={p.value} value={p.value}>{p.label}</option>
+                ))}
+              </select>
+            </div>
+            {downloadOptions.paperSize === 'custom' && (
+              <div className="flex space-x-2 mb-4">
+                <div>
+                  <label className="block text-xs mb-1">Width (inches)</label>
+                  <input type="number" min="1" step="0.01" value={downloadOptions.customWidth.toString()}
+                    onChange={e => setDownloadOptions(opt => ({ ...opt, customWidth: parseFloat(e.target.value) }))}
+                    className="border rounded px-2 py-1 w-24" />
+                </div>
+                <div>
+                  <label className="block text-xs mb-1">Height (inches)</label>
+                  <input type="number" min="1" step="0.01" value={downloadOptions.customHeight.toString()}
+                    onChange={e => setDownloadOptions(opt => ({ ...opt, customHeight: parseFloat(e.target.value) }))}
+                    className="border rounded px-2 py-1 w-24" />
+                </div>
+              </div>
+            )}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Copies per Product</label>
+              <input type="number" min="1" max="10" value={downloadOptions.copiesPerProduct.toString()}
+                onChange={e => setDownloadOptions(opt => ({ ...opt, copiesPerProduct: parseInt(e.target.value) }))}
+                className="border rounded px-2 py-1 w-24" />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Margin (points)</label>
+              <input type="number" min="0" max="200" value={downloadOptions.margin.toString()}
+                onChange={e => setDownloadOptions(opt => ({ ...opt, margin: parseInt(e.target.value) }))}
+                className="border rounded px-2 py-1 w-24" />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button onClick={() => setShowDownloadModal(false)} className="px-4 py-2 rounded bg-gray-200">Cancel</button>
+              <button onClick={submitFlexibleDownload} className="px-4 py-2 rounded bg-purple-600 text-white">Download</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-gray-900">QR Code Batches</h3>
@@ -838,16 +849,6 @@ const QRCodeManagement: React.FC<QRCodeManagementProps> = ({ token, onStatsUpdat
                           >
                             <Trash2 className="w-3 h-3" />
                             <span>{deletingBatchId === batch._id ? 'Deleting...' : 'Delete'}</span>
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDownloadPDF(batch._id);
-                            }}
-                            className="flex items-center space-x-1 bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm hover:bg-blue-200 transition-colors"
-                          >
-                            <Download className="w-3 h-3" />
-                            <span>PDF</span>
                           </button>
                         </div>
                       </div>
