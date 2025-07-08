@@ -29,7 +29,7 @@ const Settings: React.FC<SettingsProps> = ({ token }) => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/admin/categories', {
+      const response = await fetch('https://qr-system-back-end.vercel.app/api/admin/categories', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -85,7 +85,7 @@ const Settings: React.FC<SettingsProps> = ({ token }) => {
   const handleDelete = async (categoryId: string) => {
     if (window.confirm('Are you sure you want to delete this category? This action cannot be undone.')) {
       try {
-        const response = await fetch(`/api/admin/categories/${categoryId}`, {
+        const response = await fetch(`https://qr-system-back-end.vercel.app/api/admin/categories/${categoryId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`

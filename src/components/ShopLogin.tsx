@@ -35,7 +35,7 @@ const ShopLogin: React.FC = () => {
 
   const fetchQRData = async () => {
     try {
-      const response = await fetch(`/api/public/qr/${serialNumber}`);
+      const response = await fetch(`https://qr-system-back-end.vercel.app/api/public/qr/${serialNumber}`);
       const data = await response.json();
 
       if (response.ok) {
@@ -54,7 +54,7 @@ const ShopLogin: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('/api/public/shop/login', {
+      const response = await fetch('https://qr-system-back-end.vercel.app/api/public/shop/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

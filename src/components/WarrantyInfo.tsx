@@ -43,7 +43,7 @@ const WarrantyInfo: React.FC = () => {
 
   const fetchWarrantyData = async () => {
     try {
-      const response = await fetch(`/api/public/qr/${serialNumber}`);
+      const response = await fetch(`https://qr-system-back-end.vercel.app/api/public/qr/${serialNumber}`);
       const data = await response.json();
 
       if (response.ok) {
